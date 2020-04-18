@@ -1,6 +1,7 @@
 import React from 'react';
 import { AsyncFCOptions, AsyncFunctionComponent, AsyncFCProps } from './types';
 import useIsomorphicEffect from './utils/useIsomorphicEffect';
+import Subscription from './subscription';
 
 interface AsyncPending {
   state: 'pending';
@@ -20,19 +21,21 @@ type AsyncState = AsyncPending | AsyncSuccess | AsyncFailure;
 
 export default function createNonSuspense<P = {}>(
   render: AsyncFunctionComponent<P>,
-  { defaultFallback, keySupplier }: AsyncFCOptions<P>,
+  { defaultFallback, dependencies }: AsyncFCOptions<P>,
 ): React.FC<P & AsyncFCProps> {
   return function Async({ fallback, ...props }: AsyncFCProps & P): JSX.Element {
-    const [state, setState] = React.useState<AsyncState>({
-      state: 'pending',
-    });
-
-    const key = React.useMemo(() => keySupplier(props as P), [props]);
+    const [state, setState] = React.useState<AsyncState | null>(null);
 
     useIsomorphicEffect(() => {
+      setState({
+        state: 'pending',
+      });
+
       let mounted = true;
 
-      render(props as P).then(
+      const subscription = new Subscription();
+
+      render(props as P, subscription).then(
         (value: JSX.Element) => {
           if (mounted) {
             setState({
@@ -52,17 +55,21 @@ export default function createNonSuspense<P = {}>(
       );
 
       return (): void => {
+        subscription.cancel();
         mounted = false;
       };
-    }, [key]);
+    }, dependencies(props as P));
+
+    if (!state) {
+      return <>{ fallback ?? defaultFallback }</>;
+    }
 
     switch (state.state) {
-      case 'pending':
-        return <>{ fallback ?? defaultFallback }</>;
       case 'failure':
         throw state.value;
       case 'success':
         return state.value;
+      case 'pending':
       default:
         return <>{ fallback ?? defaultFallback }</>;
     }

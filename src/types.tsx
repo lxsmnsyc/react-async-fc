@@ -1,7 +1,12 @@
+import Subscription from './subscription';
 
-export type AsyncFunctionComponent<P> = (props: P) => Promise<JSX.Element>;
+export type AsyncFunctionComponentPropless =
+  (subscription: Subscription) => Promise<JSX.Element>;
 
-export type KeySupplier<P> = (props: P) => string;
+export type AsyncFunctionComponent<P> =
+  (props: P, subscription: Subscription) => Promise<JSX.Element>;
+
+export type Dependencies<P> = (props: P) => React.DependencyList;
 
 export interface AsyncFCProps {
   fallback?: React.ReactNode;
@@ -10,5 +15,5 @@ export interface AsyncFCProps {
 export interface AsyncFCOptions<P> {
   defaultFallback?: React.ReactNode;
   suspense?: boolean;
-  keySupplier: KeySupplier<P>;
+  dependencies: Dependencies<P>;
 }

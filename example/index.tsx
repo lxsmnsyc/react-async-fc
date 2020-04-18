@@ -3,20 +3,25 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import asyncFC from '../.';
 
-const sleep = (time) => new Promise((res) => setTimeout(res, time, true));
-
 interface SleepingProps {
   id: number;
   duration: number;
 }
 
-const Sleeping = asyncFC(
-  async ({ duration }: SleepingProps) => {
-    await sleep(duration);
+const Sleeping = asyncFC<SleepingProps>(
+  async ({ duration }, subscription) => {
+    await new Promise((res) => {
+      const timeout = setTimeout(res, duration, true)
+
+      subscription.addListener(() => {
+        clearTimeout(timeout);
+      });
+    });
 
     return <h1>Woke up!</h1>;
   }, {
-    keySupplier: ({ id }) => `${id}`,
+    dependencies: ({ id }) => [id],
+    suspense: true,
   },
 );
 
@@ -34,9 +39,10 @@ const App = () => {
       <Sleeping
         duration={state}
         id={id}
-        fallback={<h1>Sleeping for {state / 1000} seconds.</h1>}
+        fallback={<h1>Sleeping for {(state / 1000).toFixed(2)} seconds.</h1>}
       />
       <button onClick={onClick}>Go to sleep for 1 to 10 seconds!</button>
+      <p>Current render id: {id}</p>
     </div>
   );
 };

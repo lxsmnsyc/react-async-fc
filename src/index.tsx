@@ -42,3 +42,6 @@ export default function asyncFC<P = {}>(
   }
   return createNonSuspense(render, options);
 }
+
+export * from './types';
+export { default as Subscription } from './subscription';

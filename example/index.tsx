@@ -9,17 +9,34 @@ interface SleepingProps {
 
 const Sleeping = asyncFC<SleepingProps>(
   async ({ duration }, subscription) => {
+    /**
+     * Create a Promise timeout that resolves
+     * once the timeout ends.
+     */
     await new Promise((res) => {
       const timeout = setTimeout(res, duration, true)
 
+      /**
+       * Once the subscription is cancelled, we perform
+       * the cleanup for the timeout instance.
+       */
       subscription.addListener(() => {
         clearTimeout(timeout);
       });
     });
 
+    /**
+     * Timeout is expired, render the elements.
+     */
     return <h1>Woke up!</h1>;
   }, {
+    /**
+     * Only re-render the component when the duration changes.
+     */
     dependencies: ({ duration }) => [duration],
+    /**
+     * Use Suspense for data fetching internally.
+     */
     suspense: true,
   },
 );

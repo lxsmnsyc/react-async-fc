@@ -25,7 +25,7 @@
  * @author Alexis Munsayac <alexis.munsayac@gmail.com>
  * @copyright Alexis Munsayac 2020
  */
-import * as React from 'react';
+import React from 'react';
 import createSuspenseful from './create-suspenseful';
 import createNonSuspense from './create-non-suspense';
 import { AsyncFunctionComponent, AsyncFCOptions, AsyncFCProps } from './types';
